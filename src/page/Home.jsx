@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import axiosInstance from '../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
+import { CSVLink } from 'react-csv';
+import { MdOutlineDownload } from "react-icons/md";
 
 const Home = () => {
   
@@ -15,17 +17,42 @@ const Home = () => {
       });
       const [currentPage, setCurrentPage] = useState(1);
       const [rowsPerPage, setRowsPerPage] = useState(3);
+      const [loading,setLoading] = useState(false);
+
+
+      const headers = [
+        { label: "Name", key: "name" },
+        { label: "Email", key: "email" },
+        { label: "Email Updated At", key: "emailUpdatedAt" },
+        { label: "Email Updated IP", key: "emailUpdatedFromIP" },
+        { label: "Address", key: "address" },
+        { label: "Address Updated At", key: "addressUpdatedAt" },
+        { label: "Address Updated IP", key: "addressUpdatedFromIP" },
+        { label: "Contact Number", key: "contactNumber" },
+        { label: "Contact Number Updated At", key: "contactNumberUpdatedAt" },
+        { label: "Contact Number Updated IP", key: "contactNumberUpdatedFromIP" },
+      ];
+
     
       useEffect(()=>{
+        setLoading(true);
         axiosInstance.get('details/all').then((res)=>{
             if(res.data.statusCode<400){
                 console.log(res.data.data.userDetails)
                 const transformedData = res.data.data.userDetails.map((item) => ({
-                    name: item.user?.fullName || "N/A",
-                    email: item.email || "N/A",
-                    address: item.address || "N/A",
-                    contactNumber: item.contactNumber || "N/A",
-                  }));
+                  name: item.user?.fullName || "N/A",
+                  email: item.email || "N/A",
+                  emailUpdatedAt: item.emailUpdatedAt? new Date(item.emailUpdatedAt).toLocaleString() : "N/A",
+                  emailUpdatedFromIP: item.emailUpdatedFromIP || "N/A",
+                  address: item.address || "N/A",
+                  addressUpdatedAt: item.addressUpdatedAt? new Date(item.addressUpdatedAt).toLocaleString() : "N/A",
+                  addressUpdatedFromIP: item.addressUpdatedFromIP || "N/A",
+                  contactNumber: item.contactNumber || "N/A",
+                  contactNumberUpdatedAt: item.contactNumberUpdatedAt? new Date(item.contactNumberUpdatedAt).toLocaleString() :"N/A",
+                  contactNumberUpdatedFromIP: item.contactNumberUpdatedFromIP || "N/A",
+                }));
+                
+           
           
                   setData(transformedData);
             
@@ -36,6 +63,8 @@ const Home = () => {
           }).catch((err)=>{
             console.error(err);
             toast.error(err?.response?.data?.message||'Error occurred while getting Details.')
+          }).finally(()=>{
+            setLoading(false);
           })
       },[])
 
@@ -62,8 +91,10 @@ const Home = () => {
   return (
     <div className="p-6 bg-blue-0 min-h-screen">
         <Navbar/>
-    <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">User Details</h2>
-
+    <h2 className="text-2xl font-bold text-center mb-3 text-gray-700">User Details</h2>
+    <div className='p-2 bg-blue-500 w-40 text-center rounded-lg text-white hover:bg-blue-600 my-3'>
+    <CSVLink data={data} headers={headers} className='flex gap-x-2 text-center w-full' filename='Sharence_Data'><MdOutlineDownload size={25} className='flex-col items-center h-full '/> Download CSV</CSVLink>
+    </div>
     {/* Table and Filters */}
     <div className="overflow-x-auto shadow-lg border border-gray-200 rounded-lg bg-blue-50">
       <table className="table-auto w-full">
@@ -89,6 +120,7 @@ const Home = () => {
                 className="w-full p-2 border bg-blue-50 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </th>
+            <th></th>
             <th className="p-4 text-left text-gray-600">
               <input
                 type="text"
@@ -99,6 +131,7 @@ const Home = () => {
                 className="w-full p-2 border bg-blue-50 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </th>
+            <th></th>
             <th className="p-4 text-left text-gray-600">
               <input
                 type="text"
@@ -109,26 +142,34 @@ const Home = () => {
                 className="w-full p-2 border bg-blue-50 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </th>
+            <th></th>
           </tr>
           <tr className="text-gray-700">
-            <th className="p-4 text-left font-semibold">Name</th>
-            <th className="p-4 text-left font-semibold">Email</th>
-            <th className="p-4 text-left font-semibold">Address</th>
-            <th className="p-4 text-left font-semibold">Contact Number</th>
+            <th className="p-4 text-center font-semibold">Name</th>
+            <th className="p-4 text-center font-semibold">Email</th>
+            <th className="p-4 text-center font-semibold">Email Update Details</th>
+            <th className="p-4 text-center font-semibold">Address</th>
+            <th className="p-4 text-center font-semibold">Address Update Details</th>
+            <th className="p-4 text-center font-semibold">Contact No.</th>
+            <th className="p-4 text-center font-semibold">Contact No. Update Details</th>
+
           </tr>
         </thead>
         <tbody>
           {paginatedData.map((row) => (
             <tr key={row.id} className="hover:bg-blue-100">
-              <td className="p-4 border-b">{row.name}</td>
-              <td className="p-4 border-b">{row.email}</td>
-              <td className="p-4 border-b">{row.address}</td>
-              <td className="p-4 border-b">{row.contactNumber}</td>
+              <td className="p-4 text-center border-b">{row.name}</td>
+              <td className="p-4 text-center border-b">{row.email}</td>
+              <td className="p-4 text-center border-b">{row.emailUpdatedAt+" "+row.emailUpdatedFromIP}</td>
+              <td className="p-4 text-center border-b">{row.address}</td>
+              <td className="p-4 text-center border-b">{row.addressUpdatedAt+" "+row.addressUpdatedFromIP}</td>
+              <td className="p-4 text-center border-b">{row.contactNumber}</td>
+              <td className="p-4 text-center border-b">{row.contactNumberUpdatedAt+" "+row.contactNumberUpdatedFromIP}</td>
             </tr>
           ))}
           {paginatedData.length === 0 && (
             <tr>
-              <td colSpan="4" className="p-4 text-center text-gray-500">
+              <td colSpan="7" className="p-4 text-center text-gray-500">
                 No matching records found.
               </td>
             </tr>
